@@ -1,0 +1,183 @@
+<!--
+  Práctica: FormularioReactivo (Desarrollo de Interfaces - 2º DAM)
+  Instituto Nebrija de Formación Profesional
+  Autor: Luis Lázaro Pimentel
+-->
+
+<ion-header [translucent]="true">
+  <ion-toolbar color="dark">
+    <ion-title>Formulario Reactivo</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        (click)="themeService.toggleTheme()"
+        fill="clear"
+        class="theme-toggle-btn"
+        aria-label="Alternar modo oscuro y claro"
+      >
+        <span *ngIf="!themeService.isDarkMode()">🌙 Oscuro</span>
+        <span *ngIf="themeService.isDarkMode()">☀️ Claro</span>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Segmentos de navegación principal -->
+  <ion-segment [value]="'registro'" (ionChange)="onSegmentChange($event)" class="global-nav-segment">
+    <ion-segment-button value="registro">
+      <ion-label>1. Reactivo</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="driven">
+      <ion-label>2. Driven</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="inventario">
+      <ion-label>3. Inventario WMS</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+</ion-header>
+
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="page-responsive-container">
+
+    <!-- Tarjeta de Identificación Editorial -->
+    <ion-card class="editorial-card hero-card">
+      <ion-card-header>
+        <div class="card-meta-row">
+          <span class="editorial-badge badge-primary">Model-Driven (Reactive)</span>
+          <span class="author-tag">Luis Lázaro · 2º DAM Nebrija</span>
+        </div>
+        <ion-card-title class="editorial-title">Alta de Usuario</ion-card-title>
+        <ion-card-subtitle class="editorial-subtitle">
+          Validación síncrona en TypeScript, inmutabilidad y hashing SHA-256
+        </ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
+
+    <!-- Formulario Reactivo -->
+    <form [formGroup]="registroForm" (ngSubmit)="onSubmit()" novalidate class="form-wrapper">
+      <ion-list lines="none" class="editorial-list">
+
+        <!-- 1. Nombre -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Nombre Completo"
+            labelPlacement="floating"
+            type="text"
+            formControlName="nombre"
+            placeholder="Ej. Ana García Martínez"
+            aria-label="Nombre Completo"
+            [errorText]="getErrorMessage('nombre')"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 2. Email -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Correo Electrónico"
+            labelPlacement="floating"
+            type="email"
+            inputmode="email"
+            formControlName="email"
+            placeholder="ejemplo@dominio.com"
+            aria-label="Correo Electrónico"
+            [errorText]="getErrorMessage('email')"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 3. Password -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Contraseña (mín. 8 caracteres, letra y número)"
+            labelPlacement="floating"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            aria-label="Contraseña"
+            [errorText]="getErrorMessage('password')"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 4. Fecha de Nacimiento -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Fecha de Nacimiento (máx. hoy)"
+            labelPlacement="floating"
+            type="date"
+            formControlName="fechaNacimiento"
+            [max]="maxDateToday"
+            aria-label="Fecha de Nacimiento"
+            [errorText]="getErrorMessage('fechaNacimiento')"
+          ></ion-input>
+        </ion-item>
+
+      </ion-list>
+
+      <!-- Botón de Envío -->
+      <ion-button
+        expand="block"
+        type="submit"
+        [disabled]="registroForm.invalid || isSubmitting()"
+        class="cta-button"
+        aria-label="Registrar Usuario Reactivo"
+      >
+        <span *ngIf="!isSubmitting()">Registrar Usuario (Reactivo)</span>
+        <ion-spinner *ngIf="isSubmitting()" name="crescent" aria-label="Validando y cifrando..."></ion-spinner>
+      </ion-button>
+    </form>
+
+    <!-- Comprobante de Envío y Botón de Descarga PDF -->
+    <ion-card *ngIf="ultimoEnvio() as envio" class="editorial-card receipt-card ion-margin-top">
+      <ion-card-header>
+        <div class="card-meta-row">
+          <span class="editorial-badge badge-success">✓ Envío Procesado</span>
+          <span class="author-tag">{{ envio.fechaRegistro }}</span>
+        </div>
+        <ion-card-title class="editorial-title">Comprobante de Registro</ion-card-title>
+        <ion-card-subtitle class="editorial-subtitle">
+          La contraseña fue cifrada antes de emitirse a consola
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="receipt-data-grid">
+          <div class="receipt-row">
+            <span class="receipt-label">Nombre:</span>
+            <strong class="receipt-value">{{ envio.nombre }}</strong>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Email:</span>
+            <span class="receipt-value">{{ envio.email }}</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Nacimiento:</span>
+            <span class="receipt-value">{{ envio.fechaNacimiento }}</span>
+          </div>
+          <div class="receipt-row hash-row">
+            <span class="receipt-label">Hash SHA-256:</span>
+            <code class="hash-box" title="{{ envio.passwordHash }}">{{ envio.passwordHash.substring(0, 32) }}...</code>
+          </div>
+        </div>
+
+        <!-- Botón para descargar el PDF real -->
+        <ion-button
+          expand="block"
+          color="success"
+          (click)="descargarPDF()"
+          class="pdf-download-btn ion-margin-top"
+          aria-label="Descargar Comprobante PDF"
+        >
+          📄 Descargar Comprobante PDF
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+  <!-- Notificación Toast -->
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    message="¡Formulario reactivo validado y enviado con éxito! Contraseña cifrada en consola con SHA-256."
+    [duration]="3500"
+    color="success"
+    position="bottom"
+    (didDismiss)="isToastOpen.set(false)"
+  ></ion-toast>
+</ion-content>

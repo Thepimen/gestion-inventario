@@ -1,0 +1,203 @@
+<!--
+  Práctica: FormularioReactivo (Desarrollo de Interfaces - 2º DAM)
+  Instituto Nebrija de Formación Profesional
+  Autor: Luis Lázaro Pimentel
+-->
+
+<ion-header [translucent]="true">
+  <ion-toolbar color="dark">
+    <ion-title>Inventario Móvil (WMS)</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        (click)="themeService.toggleTheme()"
+        fill="clear"
+        class="theme-toggle-btn"
+        aria-label="Alternar modo oscuro y claro"
+      >
+        <span *ngIf="!themeService.isDarkMode()">🌙 Oscuro</span>
+        <span *ngIf="themeService.isDarkMode()">☀️ Claro</span>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Segmentos de navegación principal -->
+  <ion-segment [value]="'inventario'" (ionChange)="onSegmentChange($event)" class="global-nav-segment">
+    <ion-segment-button value="registro">
+      <ion-label>1. Reactivo</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="driven">
+      <ion-label>2. Driven</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="inventario">
+      <ion-label>3. Inventario WMS</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+</ion-header>
+
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="page-responsive-container">
+
+    <!-- Tarjeta de bienvenida e información del operario -->
+    <ion-card class="operator-card">
+      <ion-card-header>
+        <div class="card-top-row">
+          <ion-badge color="primary" class="badge-tag">WMS Offline-First</ion-badge>
+          <span class="operator-info">Operario: <strong>Luis Lázaro Pimentel</strong> (2º DAM)</span>
+        </div>
+        <ion-card-title class="card-main-title">Registro de Mercancía</ion-card-title>
+        <ion-card-subtitle>Almacén Central - Control de Stock Mínimo</ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
+
+    <!-- Formulario Reactivo de Inventario -->
+    <form [formGroup]="inventarioForm" (ngSubmit)="onSubmit()" novalidate class="inventory-form">
+      <ion-list lines="none" class="form-list">
+        
+        <!-- 1. Campo Código de Barras (SKU) -->
+        <ion-item class="form-item">
+          <ion-input
+            label="Código de Barras (SKU)"
+            labelPlacement="floating"
+            type="text"
+            maxlength="12"
+            formControlName="sku"
+            [counter]="true"
+            aria-label="Código de Barras (SKU)"
+            placeholder="Ej. AB1234567890"
+            [errorText]="getErrorMessage('sku') || 'Código obligatorio (exactamente 12 caracteres alfanuméricos).'"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 2. Campo Nombre del Producto -->
+        <ion-item class="form-item">
+          <ion-input
+            label="Nombre del Producto"
+            labelPlacement="floating"
+            type="text"
+            formControlName="nombre"
+            aria-label="Nombre del Producto"
+            placeholder="Ej. Taladro Percutor Inalámbrico"
+            [errorText]="'El nombre del producto es obligatorio (mín. 3 caracteres).'"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 3. Campo Categoría del Producto -->
+        <ion-item class="form-item category-item">
+          <ion-select
+            label="Categoría"
+            labelPlacement="floating"
+            formControlName="categoria"
+            interface="action-sheet"
+            placeholder="Selecciona una categoría"
+            aria-label="Categoría del Producto"
+            cancelText="Cancelar"
+          >
+            <ion-select-option value="Electrónica">Electrónica</ion-select-option>
+            <ion-select-option value="Herramientas">Herramientas</ion-select-option>
+            <ion-select-option value="Consumibles">Consumibles</ion-select-option>
+          </ion-select>
+        </ion-item>
+        <!-- Nota de error accesible para el selector de categoría -->
+        <ion-note
+          *ngIf="f['categoria'].touched && f['categoria'].invalid"
+          color="danger"
+          class="category-error-note ion-padding-start"
+          role="alert"
+        >
+          {{ getErrorMessage('categoria') || 'Debes seleccionar una categoría obligatoria.' }}
+        </ion-note>
+
+        <!-- 4. Campo Stock Mínimo -->
+        <ion-item class="form-item">
+          <ion-input
+            label="Stock Mínimo"
+            labelPlacement="floating"
+            type="number"
+            inputmode="numeric"
+            formControlName="stockMinimo"
+            aria-label="Stock Mínimo"
+            placeholder="Ej. 10"
+            [errorText]="'Introduce un stock numérico válido mayor que 0.'"
+          ></ion-input>
+        </ion-item>
+
+      </ion-list>
+
+      <!-- Botón de Envío -->
+      <ion-button
+        expand="block"
+        type="submit"
+        [disabled]="inventarioForm.invalid || isSubmitting()"
+        class="submit-button ion-margin-top"
+        aria-label="Registrar Producto"
+      >
+        <span *ngIf="!isSubmitting()">Registrar Producto en Inventario</span>
+        <ion-spinner *ngIf="isSubmitting()" name="crescent" aria-label="Guardando producto..."></ion-spinner>
+      </ion-button>
+    </form>
+
+    <!-- Panel Inferior: Verificación en tiempo real de persistencia local -->
+    <ion-card class="saved-items-card ion-margin-top">
+      <ion-card-header>
+        <div class="saved-header-row">
+          <div>
+            <ion-card-title class="saved-title">Productos en Almacén Local</ion-card-title>
+            <ion-card-subtitle>
+              {{ itemsGuardados().length }} producto(s) almacenado(s) offline
+            </ion-card-subtitle>
+          </div>
+          <ion-button
+            *ngIf="itemsGuardados().length > 0"
+            fill="clear"
+            color="medium"
+            size="small"
+            (click)="limpiarHistorial()"
+            title="Borrar registro de pruebas"
+          >
+            Limpiar
+          </ion-button>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Estado vacío si aún no hay items -->
+        <div *ngIf="itemsGuardados().length === 0" class="empty-state">
+          <p>No hay productos registrados en esta sesión local.</p>
+          <span class="empty-hint">Completa el formulario y pulsa "Registrar Producto" para verificar la persistencia.</span>
+        </div>
+
+        <!-- Lista de productos almacenados -->
+        <ion-list *ngIf="itemsGuardados().length > 0" lines="inset" class="saved-list">
+          <ion-item *ngFor="let item of itemsGuardados()" class="saved-item">
+            <div class="item-content-wrapper">
+              <div class="item-main-info">
+                <strong>{{ item.nombre }}</strong>
+                <div class="item-meta">
+                  <span class="sku-badge">SKU: {{ item.sku }}</span>
+                  <span class="category-pill">{{ item.categoria }}</span>
+                </div>
+              </div>
+              <div class="item-stock-info">
+                <ion-badge color="primary" class="stock-badge">
+                  Stock Mín: {{ item.stockMinimo }}
+                </ion-badge>
+                <small class="timestamp">{{ item.fechaRegistro }}</small>
+              </div>
+            </div>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+  <!-- Notificación Toast de Confirmación -->
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    message="Producto guardado localmente en el inventario"
+    [duration]="3000"
+    color="success"
+    position="bottom"
+    (didDismiss)="isToastOpen.set(false)"
+  ></ion-toast>
+</ion-content>

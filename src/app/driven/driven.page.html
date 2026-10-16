@@ -1,0 +1,261 @@
+<!--
+  Práctica: FormularioReactivo (Desarrollo de Interfaces - 2º DAM)
+  Instituto Nebrija de Formación Profesional
+  Autor: Luis Lázaro Pimentel
+-->
+
+<ion-header [translucent]="true">
+  <ion-toolbar color="dark">
+    <ion-title>Formulario Template-Driven</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        (click)="themeService.toggleTheme()"
+        fill="clear"
+        class="theme-toggle-btn"
+        aria-label="Alternar modo oscuro y claro"
+      >
+        <span *ngIf="!themeService.isDarkMode()">🌙 Oscuro</span>
+        <span *ngIf="themeService.isDarkMode()">☀️ Claro</span>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- Segmentos de navegación principal -->
+  <ion-segment [value]="'driven'" (ionChange)="onSegmentChange($event)" class="global-nav-segment">
+    <ion-segment-button value="registro">
+      <ion-label>1. Reactivo</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="driven">
+      <ion-label>2. Driven</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="inventario">
+      <ion-label>3. Inventario WMS</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+</ion-header>
+
+<ion-content class="ion-padding" [fullscreen]="true">
+  <div class="page-responsive-container">
+
+    <!-- Tarjeta de Identificación Editorial -->
+    <ion-card class="editorial-card hero-card">
+      <ion-card-header>
+        <div class="card-meta-row">
+          <span class="editorial-badge badge-driven">Template-Driven (FormsModule)</span>
+          <span class="author-tag">Luis Lázaro · 2º DAM Nebrija</span>
+        </div>
+        <ion-card-title class="editorial-title">Alta de Usuario (Driven)</ion-card-title>
+        <ion-card-subtitle class="editorial-subtitle">
+          Enlace bidireccional [(ngModel)], validaciones directivas y mutabilidad
+        </ion-card-subtitle>
+      </ion-card-header>
+    </ion-card>
+
+    <!-- Formulario Template-Driven -->
+    <form #f="ngForm" (ngSubmit)="onSubmit(f)" novalidate class="form-wrapper">
+      <ion-list lines="none" class="editorial-list">
+
+        <!-- 1. Nombre -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Nombre Completo"
+            labelPlacement="floating"
+            type="text"
+            name="nombre"
+            [(ngModel)]="formData.nombre"
+            #nombreModel="ngModel"
+            required
+            minlength="3"
+            placeholder="Ej. Carlos Mendoza Gil"
+            aria-label="Nombre Completo"
+            [errorText]="nombreModel.touched && nombreModel.invalid ? (nombreModel.errors?.['required'] ? 'El nombre es obligatorio.' : 'El nombre debe tener mín. 3 caracteres.') : ''"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 2. Email -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Correo Electrónico"
+            labelPlacement="floating"
+            type="email"
+            inputmode="email"
+            name="email"
+            [(ngModel)]="formData.email"
+            #emailModel="ngModel"
+            required
+            email
+            placeholder="usuario@dominio.com"
+            aria-label="Correo Electrónico"
+            [errorText]="emailModel.touched && emailModel.invalid ? (emailModel.errors?.['required'] ? 'El correo es obligatorio.' : 'Introduce un formato de email válido.') : ''"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 3. Password -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Contraseña (mín. 8 caracteres, letra y número)"
+            labelPlacement="floating"
+            type="password"
+            name="password"
+            [(ngModel)]="formData.password"
+            #passModel="ngModel"
+            required
+            pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
+            placeholder="••••••••"
+            aria-label="Contraseña"
+            [errorText]="passModel.touched && passModel.invalid ? (passModel.errors?.['required'] ? 'La contraseña es obligatoria.' : 'Mín. 8 caracteres, al menos una letra y un número.') : ''"
+          ></ion-input>
+        </ion-item>
+
+        <!-- 4. Fecha de Nacimiento -->
+        <ion-item class="editorial-item">
+          <ion-input
+            label="Fecha de Nacimiento (máx. hoy)"
+            labelPlacement="floating"
+            type="date"
+            name="fechaNacimiento"
+            [(ngModel)]="formData.fechaNacimiento"
+            (ionInput)="onFechaInput()"
+            (ionChange)="onFechaInput()"
+            #fechaModel="ngModel"
+            required
+            [max]="maxDateToday"
+            aria-label="Fecha de Nacimiento"
+            [errorText]="(fechaModel.touched && fechaModel.invalid) ? 'La fecha de nacimiento es obligatoria.' : (fechaFuturaError() ? 'La fecha de nacimiento no puede ser superior a hoy.' : '')"
+          ></ion-input>
+        </ion-item>
+
+      </ion-list>
+
+      <!-- Botón de Envío -->
+      <ion-button
+        expand="block"
+        type="submit"
+        [disabled]="f.invalid || fechaFuturaError() || isSubmitting()"
+        class="cta-button"
+        aria-label="Registrar Usuario Template-Driven"
+      >
+        <span *ngIf="!isSubmitting()">Registrar Usuario (Template-Driven)</span>
+        <ion-spinner *ngIf="isSubmitting()" name="crescent" aria-label="Validando y cifrando..."></ion-spinner>
+      </ion-button>
+    </form>
+
+    <!-- Comprobante y Descarga PDF -->
+    <ion-card *ngIf="ultimoEnvio() as envio" class="editorial-card receipt-card ion-margin-top">
+      <ion-card-header>
+        <div class="card-meta-row">
+          <span class="editorial-badge badge-success">✓ Envío Template-Driven</span>
+          <span class="author-tag">{{ envio.fechaRegistro }}</span>
+        </div>
+        <ion-card-title class="editorial-title">Comprobante de Registro</ion-card-title>
+        <ion-card-subtitle class="editorial-subtitle">
+          Contraseña cifrada con SHA-256 antes de emitir a consola
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="receipt-data-grid">
+          <div class="receipt-row">
+            <span class="receipt-label">Nombre:</span>
+            <strong class="receipt-value">{{ envio.nombre }}</strong>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Email:</span>
+            <span class="receipt-value">{{ envio.email }}</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Nacimiento:</span>
+            <span class="receipt-value">{{ envio.fechaNacimiento }}</span>
+          </div>
+          <div class="receipt-row hash-row">
+            <span class="receipt-label">Hash SHA-256:</span>
+            <code class="hash-box" title="{{ envio.passwordHash }}">{{ envio.passwordHash.substring(0, 32) }}...</code>
+          </div>
+        </div>
+
+        <ion-button
+          expand="block"
+          color="success"
+          (click)="descargarPDF()"
+          class="pdf-download-btn ion-margin-top"
+          aria-label="Descargar Comprobante PDF"
+        >
+          📄 Descargar Comprobante PDF
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Cuadro Comparativo Técnico: Reactive vs Template-Driven -->
+    <ion-card class="editorial-card comparison-card ion-margin-top">
+      <ion-card-header>
+        <span class="editorial-badge badge-tech">Análisis Técnico Comparativo</span>
+        <ion-card-title class="editorial-title">Reactive Forms vs Template-Driven</ion-card-title>
+        <ion-card-subtitle class="editorial-subtitle">
+          Diferencias de arquitectura, sincronización y mutabilidad
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Criterio Técnico</th>
+                <th>Reactive Forms (RegistroPage)</th>
+                <th>Template-Driven (DrivenPage)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Módulo Angular</strong></td>
+                <td><code>ReactiveFormsModule</code></td>
+                <td><code>FormsModule</code></td>
+              </tr>
+              <tr>
+                <td><strong>Definición del Modelo</strong></td>
+                <td>Explícita en TypeScript (<code>FormGroup</code>, <code>FormControl</code>)</td>
+                <td>Implícita mediante directivas HTML (<code>ngModel</code>, <code>ngForm</code>)</td>
+              </tr>
+              <tr>
+                <td><strong>Flujo de Datos</strong></td>
+                <td><strong>Síncrono</strong> y predecible</td>
+                <td><strong>Asíncrono</strong> (espera a la resolución del DOM)</td>
+              </tr>
+              <tr>
+                <td><strong>Mutabilidad</strong></td>
+                <td><strong>Inmutable</strong> (cada cambio emite un nuevo estado)</td>
+                <td><strong>Mutable</strong> (enlace bidireccional directo <code>[(ngModel)]</code>)</td>
+              </tr>
+              <tr>
+                <td><strong>Validación</strong></td>
+                <td>Funciones puras TypeScript (<code>ValidatorFn</code> síncronas/asíncronas)</td>
+                <td>Atributos y directivas declarativas en plantilla HTML</td>
+              </tr>
+              <tr>
+                <td><strong>Testabilidad Unitaria</strong></td>
+                <td>Excelente: se prueba la lógica en TS sin instanciar el DOM</td>
+                <td>Requiere renderizado del fixture y ejecución de ciclos de cambio</td>
+              </tr>
+              <tr>
+                <td><strong>Escalabilidad</strong></td>
+                <td>Óptima para formularios dinámicos, complejos e industriales</td>
+                <td>Aconsejable para formularios básicos, lineales o rápidos</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+  <!-- Toast de Confirmación -->
+  <ion-toast
+    [isOpen]="isToastOpen()"
+    message="¡Formulario Template-Driven enviado! Contraseña cifrada en consola con SHA-256."
+    [duration]="3500"
+    color="success"
+    position="bottom"
+    (didDismiss)="isToastOpen.set(false)"
+  ></ion-toast>
+</ion-content>

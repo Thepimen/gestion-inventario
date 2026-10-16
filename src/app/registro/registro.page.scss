@@ -1,0 +1,198 @@
+/**
+ * Práctica: FormularioReactivo (Desarrollo de Interfaces - 2º DAM)
+ * Instituto Nebrija de Formación Profesional
+ * Autor: Luis Lázaro Pimentel
+ *
+ * Estilos SCSS con estética Editorial / Industrial Swiss Design.
+ */
+
+:host {
+  display: block;
+}
+
+.theme-toggle-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  --color: #fafaf9;
+}
+
+/* Tarjeta Editorial */
+.editorial-card {
+  border-radius: 12px;
+  background: var(--ion-card-background);
+  border: var(--app-card-border);
+  box-shadow: var(--app-shadow);
+  margin: 0 0 16px 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  .card-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .editorial-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+
+      &.badge-primary {
+        background: rgba(194, 65, 12, 0.12);
+        color: var(--ion-color-primary);
+        border: 1px solid rgba(194, 65, 12, 0.25);
+      }
+
+      &.badge-success {
+        background: rgba(21, 128, 61, 0.12);
+        color: var(--ion-color-success);
+        border: 1px solid rgba(21, 128, 61, 0.25);
+      }
+    }
+
+    .author-tag {
+      font-size: 0.78rem;
+      color: var(--ion-color-medium);
+      font-weight: 500;
+    }
+  }
+
+  .editorial-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--ion-text-color);
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .editorial-subtitle {
+    font-size: 0.85rem;
+    color: var(--ion-color-medium);
+    line-height: 1.4;
+  }
+}
+
+/* Lista de campos y inputs ergonómicos */
+.editorial-list {
+  background: transparent;
+  padding: 0;
+
+  .editorial-item {
+    --background: var(--ion-item-background);
+    --border-radius: 10px;
+    --min-height: 56px; /* Cumple WCAG >= 48px */
+    margin-bottom: 14px;
+    border-radius: 10px;
+    border: var(--app-card-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:focus-within {
+      border-color: var(--ion-color-primary);
+      box-shadow: 0 0 0 2px rgba(194, 65, 12, 0.2);
+    }
+
+    ion-input {
+      font-size: 0.95rem;
+      --padding-top: 6px;
+      --padding-bottom: 6px;
+    }
+  }
+}
+
+/* Botón principal de acción */
+.cta-button {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+  --border-radius: 10px;
+  --box-shadow: 0 3px 10px rgba(194, 65, 12, 0.3);
+  height: 50px; /* Touch target WCAG */
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: 0.3px;
+  margin-top: 16px;
+  margin-bottom: 20px;
+  transition: transform 0.15s ease, filter 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  ion-spinner {
+    width: 22px;
+    height: 22px;
+    color: #ffffff;
+  }
+}
+
+/* Tarjeta de Recibo / Comprobante */
+.receipt-card {
+  border-left: 4px solid var(--ion-color-success);
+
+  .receipt-data-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 6px 0;
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+      border-bottom: 1px dashed var(--app-border-color);
+      padding-bottom: 6px;
+
+      .receipt-label {
+        color: var(--ion-color-medium);
+        font-weight: 500;
+      }
+
+      .receipt-value {
+        color: var(--ion-text-color);
+        font-weight: 600;
+        text-align: right;
+      }
+
+      &.hash-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        border-bottom: none;
+
+        .hash-box {
+          display: block;
+          width: 100%;
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+          font-size: 0.72rem;
+          background: rgba(0, 0, 0, 0.05);
+          color: var(--ion-color-primary);
+          padding: 6px 8px;
+          border-radius: 6px;
+          border: 1px solid var(--app-border-color);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  .pdf-download-btn {
+    --border-radius: 8px;
+    height: 48px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    letter-spacing: 0.2px;
+  }
+}
+
+body.dark-theme .receipt-card .receipt-row.hash-row .hash-box {
+  background: rgba(255, 255, 255, 0.05);
+}
